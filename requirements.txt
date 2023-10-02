@@ -1,0 +1,3 @@
+pyyaml >= 5.1
+pillow >= 9.3 
+ivcap_sdk_service >= 0.4
