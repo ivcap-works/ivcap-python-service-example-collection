@@ -134,28 +134,23 @@ service locally:
 
 ```
 % make run
-mkdir -p ./DATA
-python img_test_service.py \
-          --msg "05/06-12:13:40" \
-                --background-img <https://wallpaperaccess.com/full/4482737.png> \
-                --ivcap:out-dir /Users/ott030/src/IVCAP/Services/ivcap-python-service-example/DATA
-INFO 2023-06-05T12:13:41+1000 ivcap IVCAP Service 'simple-python-service' ?/? (sdk 0.1.0/#?) built on ?.
-INFO 2023-06-05T12:13:41+1000 ivcap Starting order 'None' for service 'simple-python-service' on node 'None'
-INFO 2023-06-05T12:13:41+1000 ivcap Starting service with 'ServiceArgs(msg='05/06-12:13:40', background_img=<ReadableFile ...>, width=640, height=480)'
-INFO 2023-06-05T12:13:41+1000 service Loading font file '/Users/ott030/src/IVCAP/Services/ivcap-python-service-example/CaveatBrush-Regular.ttf'
-INFO 2023-06-05T12:13:41+1000 ivcap Written artifact 'image.png' to './DATA/image.png'
-DEBUG 2023-06-05T12:13:41+1000 ivcap Notify {
-  "name": "image.png",
-  "artID": "file://./DATA/image.png",
-  "mime_type": "image/jpeg",
-  "meta": {
-    "msg": "05/06-12:13:40",
-    "background_img": "<https://wallpaperaccess.com/full/4482737.png> (cached)",
-    "width": 640,
-    "height": 480,
-    "$schema": "urn:example:schema:simple-python-service"
-  }
-}
+mkdir -p .../DATA/run && rm -rf .../DATA/run/*
+env PYTHONPATH=.../../../ivcap-sdk-python/ivcap-service-sdk-python/src \
+        python img_analysis_service.py \
+                --images ./examples \
+                --ivcap:out-dir ./DATA/run
+INFO 2023-10-02T15:49:39+1100 ivcap IVCAP Service 'image-analysis-example' ?/? (sdk 0.4.0) built on ?.
+INFO 2023-10-02T15:49:39+1100 ivcap Starting order 'urn:ivcap:order:00000000-0000-0000-0000-000000000000' for service 'image-analysis-example' on node 'None'
+INFO 2023-10-02T15:49:39+1100 ivcap Starting service with 'ServiceArgs(images=<LocalCollection path=.../examples>, width=100, height=100)'
+INFO 2023-10-02T15:49:39+1100 service mime-type: image/jpeg
+INFO 2023-10-02T15:49:39+1100 service processing 'Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.jpg'
+INFO 2023-10-02T15:49:39+1100 ivcap Written artifact 'Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.png' to '.../DATA/run/Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.png'
+INFO 2023-10-02T15:49:39+1100 service mime-type: image/jpeg
+INFO 2023-10-02T15:49:39+1100 service processing 'Closed_Brain_Coral.wikimedia.jpg'
+INFO 2023-10-02T15:49:39+1100 ivcap Written artifact 'Closed_Brain_Coral.wikimedia.png' to '.../DATA/run/Closed_Brain_Coral.wikimedia.png'
+INFO 2023-10-02T15:49:39+1100 service mime-type: image/jpeg
+INFO 2023-10-02T15:49:39+1100 service processing 'Black_coral.wikimedia.jpg'
+INFO 2023-10-02T15:49:39+1100 ivcap Written artifact 'Black_coral.wikimedia.png' to '.../DATA/run/Black_coral.wikimedia.png'
 >>> Output should be in './DATA'
 ```
 
