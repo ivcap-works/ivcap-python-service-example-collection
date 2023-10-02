@@ -47,7 +47,6 @@ endif
 
 run:
 	mkdir -p ${PROJECT_DIR}/DATA/run && rm -rf ${PROJECT_DIR}/DATA/run/*
-	env PYTHONPATH=${PROJECT_DIR}/../../ivcap-sdk-python/ivcap-service-sdk-python/src \
 	python ${SERVICE_FILE} \
 		--images ${TEST_IMG_DIR} \
 		--ivcap:out-dir ${PROJECT_DIR}/DATA/run
@@ -178,5 +177,14 @@ run-data-proxy:
 	python ${PROJECT_DIR}/${SERVICE_FILE} \
 		--images ${TEST_IMG_COLLECTION} \
 	@echo ">>> Output should be in '${PROJECT_DIR}/DATA/run'"
+
+# IGNORE
+run-max:
+	mkdir -p ${PROJECT_DIR}/DATA/run && rm -rf ${PROJECT_DIR}/DATA/run/*
+	env PYTHONPATH=${PROJECT_DIR}/../../ivcap-sdk-python/ivcap-service-sdk-python/src \
+	python ${SERVICE_FILE} \
+		--images ${TEST_IMG_DIR} \
+		--ivcap:out-dir ${PROJECT_DIR}/DATA/run
+	@echo ">>> Output should be in '${PROJECT_DIR}/DATA'"
 
 FORCE:

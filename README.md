@@ -135,8 +135,7 @@ service locally:
 ```
 % make run
 mkdir -p .../DATA/run && rm -rf .../DATA/run/*
-env PYTHONPATH=.../../../ivcap-sdk-python/ivcap-service-sdk-python/src \
-        python img_analysis_service.py \
+python img_analysis_service.py \
                 --images ./examples \
                 --ivcap:out-dir ./DATA/run
 INFO 2023-10-02T15:49:39+1100 ivcap IVCAP Service 'image-analysis-example' ?/? (sdk 0.4.0) built on ?.
