@@ -1,156 +1,98 @@
 # IVCAP Demo Service
 
 This directory implements a simple IVCAP service which creates a thumbnail image as
-well as some stats for every image in a collection referred to by the images' parameter.
+well as some stats for every image in a collection referred to by the _images_ parameter.
 
-## Usage: User Perspective
+* [Development Setup](#setup)
+* [Build & Deployment Service](#build-deployment)
 
-We assume that the service has already been deployed. To check that, we can use the `ivcap` cli tool.
+## Development Setup <a name="setup"></a>
 
-```
-% ivcap service list
-+----+--------------------------+------------------------------------+
-| ID | NAME                     | PROVIDER                           |
-+----+--------------------------+------------------------------------+
-| @1 | image-analysis-example   | urn:ivcap:provider:45a06508-...    |
-....
-```
+### Python
 
-To get more information on the service itself:
+First, we need to setup a Python environment. We are using `conda`, but `venv` is
+also a widely used alternative
 
 ```
-% ivcap service get @1
-
-          ID  urn:ivcap:service:19f9c31e-...                                   
-        Name  image-analysis-example                                                                    
- Description  A simple IVCAP service creating a thumbnail and reporting stats on a collection of images 
-      Status  ???                                                                                      
- Provider ID  urn:ivcap:provider:45a06508-...                                 
-  Account ID  urn:ivcap:account:45a06508-...                                   
-  Parameters  ┌────────┬────────────────────────────────┬────────────┬─────────┐                        
-              │ NAME   │ DESCRIPTION                    │ TYPE       │ DEFAULT │                        
-              ├────────┼────────────────────────────────┼────────────┼─────────┤                        
-              │ images │ Collection of image artifacts. │ collection │ ???     │                        
-              ├────────┼────────────────────────────────┼────────────┼─────────┤                        
-              │  width │ Thumbnail width.               │ int        │ 100     │                        
-              ├────────┼────────────────────────────────┼────────────┼─────────┤                        
-              │ height │ Thumbnail height.              │ int        │ 100     │                        
-              └────────┴────────────────────────────────┴────────────┴─────────┘                        
-```
-
-We can now _order_ a run over a collection by creating an _order_:
-
-```
-% ivcap order create -n "test run #1" urn:ivcap:service:19f9c31e-... images=urn:ibenthos:collection:43fa8191...
-Order 'urn:ivcap:order:503e98af-...' with status 'pending' submitted.
-```
-
-To check progress on this order:
-
-```
-% ivcap order get urn:ivcap:order:77b3780b-2b8b-41f3-b4d3-e62fac4248b2
-
-         ID  urn:ivcap:order:77b3780b-2b8b-41f3-b4d3-e62fac4248b2                                                          
-       Name  urn:ibenthos:collection:indo_flores_0922:LB4 UQ PhotoTransect@671984                                          
-     Status  executing                                                                                                     
-    Ordered  1 minute ago (02 Oct 23 15:17 AEDT)                                                                           
-    Service  image-analysis-example (@10)                                                                                  
- Account ID  urn:ivcap:account:45a06508-5c3a-4678-8e6d-e6399bf27538
- Parameters  ┌─────────────────────────────────────────────────────────────────────┐
-             │ images =  @1 (urn:ivcap:queue:ea11d34d-636b-49da-be12-e361acd511aa) │
-             │  width =  100                                                       │
-             │ height =  100                                                       │
-             └─────────────────────────────────────────────────────────────────────┘
-```
-
-Which should finally change to something like:
-
-```
-% ivcap order get urn:ivcap:order:77b3780b-2b8b-41f3-b4d3-e62fac4248b2
-
-         ID  urn:ivcap:order:77b3780b-2b8b-41f3-b4d3-e62fac4248b2
-       Name  urn:ibenthos:collection:indo_flores_0922:LB4 UQ PhotoTransect@671984                                          
-     Status  succeeded                                                                                                     
-    Ordered  1 minute ago (02 Oct 23 15:17 AEDT)                                                                           
-    Service  image-analysis-example (@10)                                                                                  
- Account ID  urn:ivcap:account:45a06508-5c3a-4678-8e6d-e6399bf27538
- Parameters  ┌─────────────────────────────────────────────────────────────────────┐
-             │ images =  @1 (urn:ivcap:queue:ea11d34d-636b-49da-be12-e361acd511aa) │
-             │  width =  100                                                       │
-             │ height =  100                                                       │
-             └─────────────────────────────────────────────────────────────────────┘
-   Products  ┌────┬─────────────────────────────────┬──────────────────┐
-             │ @2 | urn:ivcap:artifact:659cefac-... │ application/json │
-             │ @3 │ urn:ivcap:artifact:e5340ba9-... │ image/png        │
-             └────┴─────────────────────────────────┴──────────────────┘
-   Metadata  ┌────┬────────────────────────────────────────────┐
-             │ @4 │ urn:ivcap:schema:order-finished.1          │
-             │ @5 │ urn:ivcap:schema:order-placed.1            │
-             │ @6 │ urn:ivcap:schema:order-produced-artifact.1 │
-             │ @7 │ urn:ivcap:schema:order-produced-artifact.1 │
-             │ @8 │ urn:ivcap:schema:order-uses-artifact.1     │
-             │ @9 │ urn:ivcap:schema:order-uses-workflow.1     │
-             └────┴────────────────────────────────────────────┘
-```
-
-The service produces multiple images, one for each in the input collection. Let's check out the image:
-
-```
-% ivcap artifact get @3
-
-         ID  urn:ivcap:artifact:e5340ba9-...                         
-       Name  urn:ivcap:artifact:e5340ba9-...
-     Status  ready                                                                            
-       Size  16 kB                                                                            
-  Mime-type  image/png
- Account ID  urn:ivcap:account:45a06508-5c3a-4678-8e6d-e6399bf27538
-   Metadata  ┌────┬─────────────────────────────────────────────┐
-             │ @1 │ urn:example:schema:image-analysis:thumbnail │
-             │ @2 │ urn:ivcap:schema:artifact-usedBy-order.1    │
-             │ @3 │ urn:ivcap:schema:artifact.1                 │
-             └────┴─────────────────────────────────────────────┘
-```
-
-To download the image, use the artifact ID from the above _image.png_
-(`ID  urn:ivcap:artifact:e5340ba9-...`):
-
-```
-% ivcap artifact download urn:ivcap:artifact:e5340ba9-... -f /tmp/image.jpg
-... downloading file 100% [==============================] (750 kB/s)
-```
-
-## Build & Deployment
-
-First, we need to setup a Python environment:
-
-```
-conda create --name ivcap_service python=3.8 -y
+conda create --name ivcap_service python=3.9 -y
 conda activate ivcap_service
 pip install -r requirements.txt
 ```
 
-To check if everything is properly installed, use the `run` target to execute the
+### IVCAP CLI
+
+Second step is to install the `ivcap` CLI tool. There are ready to use binaries for some architectures available at the [repo's release](https://github.com/ivcap-works/ivcap-cli/releases/latest) tab.
+
+If you use homebrew, you can install it by:
+
+ ```
+brew tap brew tap ivcap-works/ivcap
+brew install ivcap
+```
+
+Please verify at this point that you can successfully log into the IVCAP cluster of your choice. See the [Configure context for a specific deployment](https://github.com/ivcap-works/ivcap-cli?tab=readme-ov-file#configure-context-for-a-specific-deployment) section in the _ivcap-cli_ repo.
+
+```
+% ivcap context get
++-------------+--------------------------------+
+| Name        | gke-dev                        |
+| URL         | https://develop.ivcap.net      |
+| Account ID  | urn:ivcap:account:45a06508...  |
+| Authorised  | yes, refreshing after ...      |
++-------------+--------------------------------+
+```
+
+### Initial Test of Service
+
+Finally, to check if everything is properly installed, use the `run` target to execute the
 service locally:
 
 ```
 % make run
-mkdir -p .../DATA/run && rm -rf .../DATA/run/*
+mkdir -p .../RUN && rm -rf .../RUN/*
 python img_analysis_service.py \
                 --images ./examples \
-                --ivcap:out-dir ./DATA/run
-INFO 2023-10-02T15:49:39+1100 ivcap IVCAP Service 'image-analysis-example' ?/? (sdk 0.4.0) built on ?.
-INFO 2023-10-02T15:49:39+1100 ivcap Starting order 'urn:ivcap:order:00000000-0000-0000-0000-000000000000' for service 'image-analysis-example' on node 'None'
-INFO 2023-10-02T15:49:39+1100 ivcap Starting service with 'ServiceArgs(images=<LocalCollection path=.../examples>, width=100, height=100)'
-INFO 2023-10-02T15:49:39+1100 service mime-type: image/jpeg
-INFO 2023-10-02T15:49:39+1100 service processing 'Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.jpg'
-INFO 2023-10-02T15:49:39+1100 ivcap Written artifact 'Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.png' to '.../DATA/run/Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.png'
-INFO 2023-10-02T15:49:39+1100 service mime-type: image/jpeg
-INFO 2023-10-02T15:49:39+1100 service processing 'Closed_Brain_Coral.wikimedia.jpg'
-INFO 2023-10-02T15:49:39+1100 ivcap Written artifact 'Closed_Brain_Coral.wikimedia.png' to '.../DATA/run/Closed_Brain_Coral.wikimedia.png'
-INFO 2023-10-02T15:49:39+1100 service mime-type: image/jpeg
-INFO 2023-10-02T15:49:39+1100 service processing 'Black_coral.wikimedia.jpg'
-INFO 2023-10-02T15:49:39+1100 ivcap Written artifact 'Black_coral.wikimedia.png' to '.../DATA/run/Black_coral.wikimedia.png'
->>> Output should be in './DATA'
+                --ivcap:out-dir ./RUN
+INFO 2024-06-13T13:08:36+1000 ivcap IVCAP Service 'image-analysis-example' ?/? (sdk 0.7.1) built on ?.
+INFO 2024-06-13T13:08:36+1000 ivcap Starting order 'urn:ivcap:order:00000000-0000-0000-0000-000000000000' for service 'image-analysis-example' on node 'None'
+INFO 2024-06-13T13:08:36+1000 ivcap Starting service with 'ServiceArgs(images=<LocalCollection path=./examples>, width=100, height=100)'
+INFO 2024-06-13T13:08:36+1000 service mime-type: image/jpeg
+INFO 2024-06-13T13:08:36+1000 service processing 'Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.jpg'
+INFO 2024-06-13T13:08:36+1000 ivcap Written artifact 'Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.png' to './RUN/Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.png'
+...
+>>> Output should be in './RUN'
+```
+
+At this point you should see a few files in the `./RUN` directory:
+
+```
+% ls RUN
+Black_coral.wikimedia.png
+Black_coral.wikimedia.png-meta.json
+Closed_Brain_Coral.wikimedia.png
+Closed_Brain_Coral.wikimedia.png-meta.json
+Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.png
+Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.png-meta.json
+urn:Black_coral.wikimedia.jpg--urn:example:schema:image-analysis:analysis.1.json
+urn:Closed_Brain_Coral.wikimedia.jpg--urn:example:schema:image-analysis:analysis.1.json
+urn:Clown_fish_in_the_Andaman_Coral_Reef.wikimedia.jpg--urn:example:schema:image-analysis:analysis.1.json
+```
+
+The `*.png` files are thumbnails of all the images in `./examples`, while the `*.png-meta.json` contains the respective metadata for that thumbnail. The `urn:*.json` file contains some statistics taken from the image.
+
+## Build & Deployment Service <a name="build-deployment"></a>
+
+An IVCAP service usually consists of a _service description_ and one or more docker
+containers implementing the computation components of the service.
+
+The included [Makefile](./Makefile) has already defined a few targets for these tasks.
+
+### Build the Docker Container
+
+For this example, we only require a single docker container as defined in [Dockerfile](./Dockerfile). To build it locally, use:
+
+```
+make docker-build
 ```
 
 To build the docker container, publish it to the repository and register the service with the respective
@@ -189,8 +131,8 @@ SERVICE = Service(
     description = "A simple IVCAP service creating a thumbnail and reporting stats on a collection of images",
     parameters = [
         Parameter(
-            name='images', 
-            type=Type.COLLECTION, 
+            name='images',
+            type=Type.COLLECTION,
             description='Collection of image artifacts.',
             optional=True),
     ...
@@ -268,3 +210,119 @@ register_service(SERVICE, service)
 ### Testing & Troubleshooting
 
 Please refer to the various `run...` targets in the [Makefile](Makefile)
+
+## Usage: User Perspective
+
+We assume that the service has already been deployed. To check that, we can use the `ivcap` cli tool.
+
+```
+% ivcap service list
++----+--------------------------+------------------------------------+
+| ID | NAME                     | PROVIDER                           |
++----+--------------------------+------------------------------------+
+| @1 | image-analysis-example   | urn:ivcap:provider:45a06508-...    |
+....
+```
+
+To get more information on the service itself:
+
+```
+% ivcap service get @1
+
+          ID  urn:ivcap:service:19f9c31e-...
+        Name  image-analysis-example
+ Description  A simple IVCAP service creating a thumbnail and reporting stats on a collection of images
+      Status  ???
+ Provider ID  urn:ivcap:provider:45a06508-...
+  Account ID  urn:ivcap:account:45a06508-...
+  Parameters  ┌────────┬────────────────────────────────┬────────────┬─────────┐
+              │ NAME   │ DESCRIPTION                    │ TYPE       │ DEFAULT │
+              ├────────┼────────────────────────────────┼────────────┼─────────┤
+              │ images │ Collection of image artifacts. │ collection │ ???     │
+              ├────────┼────────────────────────────────┼────────────┼─────────┤
+              │  width │ Thumbnail width.               │ int        │ 100     │
+              ├────────┼────────────────────────────────┼────────────┼─────────┤
+              │ height │ Thumbnail height.              │ int        │ 100     │
+              └────────┴────────────────────────────────┴────────────┴─────────┘
+```
+
+We can now _order_ a run over a collection by creating an _order_:
+
+```
+% ivcap order create -n "test run #1" urn:ivcap:service:19f9c31e-... images=urn:ibenthos:collection:43fa8191...
+Order 'urn:ivcap:order:503e98af-...' with status 'pending' submitted.
+```
+
+To check progress on this order:
+
+```
+% ivcap order get urn:ivcap:order:77b3780b-2b8b-41f3-b4d3-e62fac4248b2
+
+         ID  urn:ivcap:order:77b3780b-2b8b-41f3-b4d3-e62fac4248b2
+       Name  urn:ibenthos:collection:indo_flores_0922:LB4 UQ PhotoTransect@671984
+     Status  executing
+    Ordered  1 minute ago (02 Oct 23 15:17 AEDT)
+    Service  image-analysis-example (@10)
+ Account ID  urn:ivcap:account:45a06508-5c3a-4678-8e6d-e6399bf27538
+ Parameters  ┌─────────────────────────────────────────────────────────────────────┐
+             │ images =  @1 (urn:ivcap:queue:ea11d34d-636b-49da-be12-e361acd511aa) │
+             │  width =  100                                                       │
+             │ height =  100                                                       │
+             └─────────────────────────────────────────────────────────────────────┘
+```
+
+Which should finally change to something like:
+
+```
+% ivcap order get urn:ivcap:order:77b3780b-2b8b-41f3-b4d3-e62fac4248b2
+
+         ID  urn:ivcap:order:77b3780b-2b8b-41f3-b4d3-e62fac4248b2
+       Name  urn:ibenthos:collection:indo_flores_0922:LB4 UQ PhotoTransect@671984
+     Status  succeeded
+    Ordered  1 minute ago (02 Oct 23 15:17 AEDT)
+    Service  image-analysis-example (@10)
+ Account ID  urn:ivcap:account:45a06508-5c3a-4678-8e6d-e6399bf27538
+ Parameters  ┌─────────────────────────────────────────────────────────────────────┐
+             │ images =  @1 (urn:ivcap:queue:ea11d34d-636b-49da-be12-e361acd511aa) │
+             │  width =  100                                                       │
+             │ height =  100                                                       │
+             └─────────────────────────────────────────────────────────────────────┘
+   Products  ┌────┬─────────────────────────────────┬──────────────────┐
+             │ @2 | urn:ivcap:artifact:659cefac-... │ application/json │
+             │ @3 │ urn:ivcap:artifact:e5340ba9-... │ image/png        │
+             └────┴─────────────────────────────────┴──────────────────┘
+   Metadata  ┌────┬────────────────────────────────────────────┐
+             │ @4 │ urn:ivcap:schema:order-finished.1          │
+             │ @5 │ urn:ivcap:schema:order-placed.1            │
+             │ @6 │ urn:ivcap:schema:order-produced-artifact.1 │
+             │ @7 │ urn:ivcap:schema:order-produced-artifact.1 │
+             │ @8 │ urn:ivcap:schema:order-uses-artifact.1     │
+             │ @9 │ urn:ivcap:schema:order-uses-workflow.1     │
+             └────┴────────────────────────────────────────────┘
+```
+
+The service produces multiple images, one for each in the input collection. Let's check out the image:
+
+```
+% ivcap artifact get @3
+
+         ID  urn:ivcap:artifact:e5340ba9-...
+       Name  urn:ivcap:artifact:e5340ba9-...
+     Status  ready
+       Size  16 kB
+  Mime-type  image/png
+ Account ID  urn:ivcap:account:45a06508-5c3a-4678-8e6d-e6399bf27538
+   Metadata  ┌────┬─────────────────────────────────────────────┐
+             │ @1 │ urn:example:schema:image-analysis:thumbnail │
+             │ @2 │ urn:ivcap:schema:artifact-usedBy-order.1    │
+             │ @3 │ urn:ivcap:schema:artifact.1                 │
+             └────┴─────────────────────────────────────────────┘
+```
+
+To download the image, use the artifact ID from the above _image.png_
+(`ID  urn:ivcap:artifact:e5340ba9-...`):
+
+```
+% ivcap artifact download urn:ivcap:artifact:e5340ba9-... -f /tmp/image.jpg
+... downloading file 100% [==============================] (750 kB/s)
+```
